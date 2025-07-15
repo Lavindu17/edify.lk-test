@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Clock, BookmarkPlus, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ArticleWithAuthor } from '../services/articleService';
 import { useAuth } from '../contexts/AuthContext';
+import { useApp } from '../contexts/AppContext';
 import Card from './ui/Card';
 import Badge from './ui/Badge';
 import Tooltip from './ui/Tooltip';
@@ -22,6 +23,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   variant = 'default' 
 }) => {
   const { user } = useAuth();
+  const { dispatch } = useApp();
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,10 +34,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     try {
       if (article.is_liked) {
         await articleService.unlikeArticle(article.id, user.id);
+        dispatch({ type: 'UNLIKE_ARTICLE', payload: article.id });
       } else {
         await articleService.likeArticle(article.id, user.id);
+        dispatch({ type: 'LIKE_ARTICLE', payload: article.id });
       }
-      // In a real app, you'd update the local state or refetch
     } catch (error) {
       console.error('Error toggling like:', error);
     }
@@ -50,10 +53,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     try {
       if (article.is_bookmarked) {
         await articleService.unbookmarkArticle(article.id, user.id);
+        dispatch({ type: 'UNBOOKMARK_ARTICLE', payload: article.id });
       } else {
         await articleService.bookmarkArticle(article.id, user.id);
+        dispatch({ type: 'BOOKMARK_ARTICLE', payload: article.id });
       }
-      // In a real app, you'd update the local state or refetch
     } catch (error) {
       console.error('Error toggling bookmark:', error);
     }
@@ -181,9 +185,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={handleLike}
+                      disabled={!user}
                       className={`flex items-center space-x-1 transition-colors ${
                         article.is_liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-                      }`}
+                      } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <Heart className={`w-4 h-4 ${article.is_liked ? 'fill-current' : ''}`} />
                       <span className="text-sm">{article.likes_count}</span>
@@ -194,9 +199,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={handleBookmark}
+                      disabled={!user}
                       className={`transition-colors ${
                         article.is_bookmarked ? 'text-primary-500' : 'text-gray-400 hover:text-primary-500'
-                      }`}
+                      } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <BookmarkPlus className={`w-4 h-4 ${article.is_bookmarked ? 'fill-current' : ''}`} />
                     </motion.button>
@@ -268,9 +274,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleLike}
+                    disabled={!user}
                     className={`flex items-center space-x-1 transition-colors ${
                       article.is_liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-                    }`}
+                    } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Heart className={`w-4 h-4 ${article.is_liked ? 'fill-current' : ''}`} />
                     <span className="text-sm">{article.likes_count}</span>
@@ -281,9 +288,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleBookmark}
+                    disabled={!user}
                     className={`transition-colors ${
                       article.is_bookmarked ? 'text-primary-500' : 'text-gray-400 hover:text-primary-500'
-                    }`}
+                    } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <BookmarkPlus className={`w-4 h-4 ${article.is_bookmarked ? 'fill-current' : ''}`} />
                   </motion.button>

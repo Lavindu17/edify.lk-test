@@ -12,24 +12,30 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { useAuth } from '../contexts/AuthContext';
+import { useApp } from '../contexts/AppContext';
 import { articleService, ArticleWithAuthor } from '../services/articleService';
 
 const HomePage: React.FC = () => {
-  const [articles, setArticles] = useState<ArticleWithAuthor[]>([]);
-  const [featuredArticles, setFeaturedArticles] = useState<ArticleWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { state, dispatch } = useApp();
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
+        setLoading(true);
         const [articlesData, featuredData] = await Promise.all([
           articleService.getPublishedArticles(10),
           articleService.getFeaturedArticles()
         ]);
         
-        setArticles(articlesData);
-        setFeaturedArticles(featuredData);
+        // Combine and deduplicate articles
+        const allArticles = [...featuredData, ...articlesData];
+        const uniqueArticles = allArticles.filter((article, index, self) => 
+          index === self.findIndex(a => a.id === article.id)
+        );
+        
+        dispatch({ type: 'SET_ARTICLES', payload: uniqueArticles });
       } catch (error) {
         console.error('Failed to fetch articles:', error);
       } finally {
@@ -38,9 +44,11 @@ const HomePage: React.FC = () => {
     };
 
     fetchArticles();
-  }, []);
+  }, [dispatch]);
 
-  const trendingArticles = [...articles]
+  const featuredArticles = state.articles.filter(article => article.featured);
+  const regularArticles = state.articles.filter(article => !article.featured);
+  const trendingArticles = [...state.articles]
     .sort((a, b) => b.likes_count - a.likes_count)
     .slice(0, 3);
 
@@ -117,7 +125,7 @@ const HomePage: React.FC = () => {
                 transition={{ delay: 0.3 }}
                 className="text-center"
               >
-                <div className="text-3xl font-bold text-primary-400 mb-2">{articles.length}+</div>
+                <div className="text-3xl font-bold text-primary-400 mb-2">{state.articles.length}+</div>
                 <div className="text-gray-400">Published Articles</div>
               </motion.div>
               <motion.div
@@ -191,27 +199,47 @@ const HomePage: React.FC = () => {
             )}
 
             {/* Recent Articles */}
-            <Section animate>
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-3">
-                  <BookOpen className="w-8 h-8 text-blue-500" />
-                  <h2 className="text-3xl font-bold text-white">Latest Articles</h2>
+            {regularArticles.length > 0 && (
+              <Section animate>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center space-x-3">
+                    <BookOpen className="w-8 h-8 text-blue-500" />
+                    <h2 className="text-3xl font-bold text-white">Latest Articles</h2>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-6">
-                {articles.filter(article => !article.featured).map((article, index) => (
-                  <motion.div
-                    key={article.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <ArticleCard article={article} />
-                  </motion.div>
-                ))}
-              </div>
-            </Section>
+                
+                <div className="space-y-6">
+                  {regularArticles.map((article, index) => (
+                    <motion.div
+                      key={article.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <ArticleCard article={article} />
+                    </motion.div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {/* No Articles State */}
+            {state.articles.length === 0 && !loading && (
+              <Section animate>
+                <div className="text-center py-16">
+                  <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold text-white mb-2">No Articles Yet</h2>
+                  <p className="text-gray-400 mb-6">
+                    Be the first to publish an article and start the conversation!
+                  </p>
+                  {user && (
+                    <Button variant="primary" size="lg">
+                      Write Your First Article
+                    </Button>
+                  )}
+                </div>
+              </Section>
+            )}
           </main>
 
           {/* Sidebar */}

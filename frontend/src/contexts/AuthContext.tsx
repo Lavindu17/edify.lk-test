@@ -9,6 +9,7 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
+  isAuthenticated: boolean;
   loading: boolean;
 }
 
@@ -34,13 +35,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user: null,
     profile: null,
     session: null,
+    isAuthenticated: false,
     loading: true,
   });
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setState(prev => ({ ...prev, session, user: session?.user ?? null }));
+      setState(prev => ({ 
+        ...prev, 
+        session, 
+        user: session?.user ?? null,
+        isAuthenticated: !!session?.user
+      }));
+      
       if (session?.user) {
         loadProfile(session.user.id);
       } else {
@@ -52,7 +60,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setState(prev => ({ ...prev, session, user: session?.user ?? null }));
+      setState(prev => ({ 
+        ...prev, 
+        session, 
+        user: session?.user ?? null,
+        isAuthenticated: !!session?.user
+      }));
       
       if (session?.user) {
         await loadProfile(session.user.id);

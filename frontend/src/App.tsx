@@ -2,6 +2,8 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
+import { AppProvider } from './contexts/AppContext';
+import { QuizProvider } from './contexts/QuizContext';
 import { ToastProvider } from './components/ui/Toast';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import Header from './components/layout/Header';
@@ -25,20 +27,24 @@ function App() {
       <HelmetProvider>
         <ToastProvider>
           <AuthProvider>
-            <Router>
-              <div className="min-h-screen bg-dark-950">
-                <Header />
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/article/:slug" element={<ArticlePage />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/feed" element={<FeedPage />} />
-                  <Route path="/explore" element={<ExplorePage />} />
-                  <Route path="/write" element={<WriteDashboard />} />
-                </Routes>
-              </div>
-            </Router>
+            <AppProvider>
+              <QuizProvider>
+                <Router>
+                  <div className="min-h-screen bg-dark-950">
+                    <Header />
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/article/:slug" element={<ArticlePage />} />
+                      <Route path="/search" element={<SearchPage />} />
+                      <Route path="/feed" element={<FeedPage />} />
+                      <Route path="/explore" element={<ExplorePage />} />
+                      <Route path="/write" element={<WriteDashboard />} />
+                    </Routes>
+                  </div>
+                </Router>
+              </QuizProvider>
+            </AppProvider>
           </AuthProvider>
         </ToastProvider>
       </HelmetProvider>
